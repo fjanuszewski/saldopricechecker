@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>Label</key>
+        <string>com.tuapp.saldopricechecker</string>
+        <key>ProgramArguments</key>
+        <array>
+            <string>/Applications/SaldoPriceChecker.app/Contents/MacOS/SaldoPriceChecker</string>
+        </array>
+        <key>RunAtLoad</key>
+        <true/>
+        <key>KeepAlive</key>
+        <true/>
+        <key>StandardOutPath</key>
+        <string>${HOME}/Library/Logs/saldopricechecker.log</string>
+        <key>StandardErrorPath</key>
+        <string>${HOME}/Library/Logs/saldopricechecker_error.log</string>
+    </dict>
+</plist>

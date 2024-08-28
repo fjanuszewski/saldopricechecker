@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="1">
+    <title>SaldoPriceChecker</title>
+    <pkg-ref id="com.tuapp.saldopricechecker"/>
+    <options customize="never" require-scripts="true"/> <!-- Cambiado require-scripts a true -->
+    <choices-outline>
+        <line choice="default">
+            <line choice="com.tuapp.saldopricechecker"/>
+        </line>
+    </choices-outline>
+    <choice id="default"/>
+    <choice id="com.tuapp.saldopricechecker" visible="false">
+        <pkg-ref id="com.tuapp.saldopricechecker"/>
+    </choice>
+    <pkg-ref id="com.tuapp.saldopricechecker" installKBytes="10240" version="1.0" auth="root">./SaldoPriceChecker-pkg.pkg</pkg-ref>
+
+    <installer-script> <!-- Agregado -->
+        <postinstall file="./Scripts/postinstall.sh"/> <!-- Asegúrate de que la ruta a postinstall.sh sea correcta -->
+    </installer-script>
+</installer-gui-script>
