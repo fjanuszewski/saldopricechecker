@@ -1,0 +1,28 @@
+# Ignorar carpetas y archivos relacionados con compilaciones y distribuciones
+dist/
+build/
+*.spec
+*.pyc
+__pycache__/
+
+# Ignorar entornos virtuales
+path/to/venv/
+venv/
+
+# Ignorar archivos y carpetas temporales
+*.tmp
+*.log
+
+# Ignorar archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Ignorar el contenido de expanded_pkg y empty_dir
+expanded_pkg/*
+empty_dir/*
+
+# Ignorar cualquier archivo o carpeta dentro de resources que no quieras seguir
+# resources/
+
+# Ignorar scripts temporales o innecesarios
+scripts_uninstall/
