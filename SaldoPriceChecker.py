@@ -1,19 +1,29 @@
-import os
 import requests
 import rumps
 from collections import deque
-from datetime import datetime
+from datetime import datetime, timedelta
 
 class PriceCheckerApp(rumps.App):
     def __init__(self):
         super(PriceCheckerApp, self).__init__("Price Checker")
         self.price_threshold = 1.018
         self.notification_enabled = True
-        self.update_interval = 15 * 60
+        self.update_interval = 15 * 60  # 15 minutos en segundos
         self.event_log = deque(maxlen=10)
-        
-        # Eliminar el botón "Quit" predeterminado
-        self.quit_button = None
+        self.selected_interval = "Cada 15 minutos"
+
+        # Configurar menú
+        self.build_menu()
+
+        # Iniciar el temporizador sin hacer una consulta inicial duplicada
+        self.timer = rumps.Timer(self.update_price, self.update_interval)
+        self.timer.start()
+
+        # Seleccionar el intervalo por defecto
+        self.update_menu_state(self.selected_interval)
+
+    def build_menu(self):
+        self.quit_button = None  # Eliminar el botón "Quit" predeterminado
 
         self.menu = [
             rumps.MenuItem("Actualizar ahora", callback=self.manual_update),
@@ -29,16 +39,11 @@ class PriceCheckerApp(rumps.App):
                 rumps.MenuItem("Mostrar eventos", callback=self.show_events),
                 rumps.MenuItem("Limpiar eventos", callback=self.clear_events)
             ]),
-            rumps.MenuItem("Salir", callback=self.quit_application)  # Añadir el botón "Salir" personalizado
+            rumps.MenuItem("Salir", callback=self.quit_application)
         ]
-        
-        self.menu["Notificaciones activadas"].state = self.notification_enabled
         self.menu["Intervalo de actualización"]["Cada 15 minutos"].state = True
-        
-        self.timer = rumps.Timer(self.update_price, self.update_interval)
-        
-        # Hacer una consulta inicial después de un breve retardo para evitar posibles bloqueos
-        rumps.timer(1)(self.manual_update)
+        # Configurar estado inicial del menú
+        self.menu["Notificaciones activadas"].state = self.notification_enabled
 
     def manual_update(self, sender=None):
         self.update_price()
@@ -47,14 +52,48 @@ class PriceCheckerApp(rumps.App):
         self.timer.stop()
         self.timer.interval = interval
         self.timer.start()
+
+        # Log para el intervalo actualizado
+        print(f"Intervalo actualizado a: {interval / 60} minutos")
+
+    def set_interval(self, interval, label):
+        self.update_timer(interval)
+        self.selected_interval = label
+        self.update_menu_state(label)
+
+    def set_interval_15_min(self, sender):
+        self.set_interval(15 * 60, "Cada 15 minutos")
+
+    def set_interval_4_hours(self, sender):
+        self.set_interval(4 * 60 * 60, "Cada 4 horas")
+
+    def set_interval_8_hours(self, sender):
+        self.set_interval(8 * 60 * 60, "Cada 8 horas")
+
+    def set_interval_24_hours(self, sender):
+        self.set_interval(24 * 60 * 60, "Cada 24 horas")
+
+    def update_menu_state(self, selected_label):
+        # Desmarcar todas las opciones
+        self.menu["Intervalo de actualización"]["Cada 15 minutos"].state = False
+        self.menu["Intervalo de actualización"]["Cada 4 horas"].state = False
+        self.menu["Intervalo de actualización"]["Cada 8 horas"].state = False
+        self.menu["Intervalo de actualización"]["Cada 24 horas"].state = False
         
-        for item in self.menu["Intervalo de actualización"]:
-            item.state = False
-        sender = [item for item in self.menu["Intervalo de actualización"] if item.callback == interval][0]
-        sender.state = True
+        # Marcar solo la opción seleccionada
+        self.menu["Intervalo de actualización"][selected_label].state = True
+
+        # Log para ver qué opción fue marcada
+        print(f"Opción de intervalo marcada: {selected_label}")
 
     def update_price(self, _=None):
         try:
+            now = datetime.now()
+            next_update = now + timedelta(seconds=self.timer.interval)
+
+            # Log para la fecha y hora de la próxima actualización
+            print(f"Haciendo request a las {now.strftime('%Y-%m-%d %H:%M:%S')}. Próxima actualización a las {next_update.strftime('%Y-%m-%d %H:%M:%S')}")
+
             url = "https://api.saldo.com.ar/v3/systems?include=rates"
             response = requests.get(url)
 
@@ -69,7 +108,7 @@ class PriceCheckerApp(rumps.App):
 
                         min_recent_price = min(self.event_log, key=lambda x: x[1])[1] if self.event_log else float('inf')
 
-                        event_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        event_time = now.strftime("%Y-%m-%d %H:%M:%S")
                         icon = "🟡" if price < self.price_threshold else ""
                         self.event_log.append((event_time, formatted_price, icon))
 
@@ -91,27 +130,6 @@ class PriceCheckerApp(rumps.App):
                 self.title = f"Error en el request: {response.status_code}"
         except Exception as e:
             self.title = f"Error en la conexión: {str(e)}"
-
-    def set_interval_15_min(self, sender):
-        self.update_timer(15 * 60)
-        self.update_menu_state(sender)
-
-    def set_interval_4_hours(self, sender):
-        self.update_timer(4 * 60 * 60)
-        self.update_menu_state(sender)
-
-    def set_interval_8_hours(self, sender):
-        self.update_timer(8 * 60 * 60)
-        self.update_menu_state(sender)
-
-    def set_interval_24_hours(self, sender):
-        self.update_timer(24 * 60 * 60)
-        self.update_menu_state(sender)
-
-    def update_menu_state(self, selected_item):
-        for item in self.menu["Intervalo de actualización"]:
-            item.state = False
-        selected_item.state = True
 
     def toggle_notifications(self, sender):
         self.notification_enabled = not self.notification_enabled
