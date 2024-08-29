@@ -8,9 +8,18 @@ class PriceCheckerApp(rumps.App):
         super(PriceCheckerApp, self).__init__("Price Checker")
         self.price_threshold = 1.018
         self.notification_enabled = True
-        self.update_interval = 15 * 60  # 15 minutos en segundos
         self.event_log = deque(maxlen=10)
-        self.selected_interval = "Cada 15 minutos"
+
+        # Lista de intervalos en minutos y sus correspondientes etiquetas
+        self.intervals = [
+            (15, "Cada 15 minutos"),
+            (240, "Cada 4 horas"),
+            (480, "Cada 8 horas"),
+            (1440, "Cada 24 horas")
+        ]
+
+        self.selected_interval = self.intervals[0][1]  # Selección por defecto
+        self.update_interval = self.intervals[0][0] * 60  # Convertir a segundos
 
         # Configurar menú
         self.build_menu()
@@ -25,23 +34,23 @@ class PriceCheckerApp(rumps.App):
     def build_menu(self):
         self.quit_button = None  # Eliminar el botón "Quit" predeterminado
 
+        interval_menu = []
+        for interval, label in self.intervals:
+            interval_menu.append(rumps.MenuItem(label, callback=self.set_interval(interval, label)))
+
         self.menu = [
             rumps.MenuItem("Actualizar ahora", callback=self.manual_update),
             rumps.MenuItem("Notificaciones activadas", callback=self.toggle_notifications),
             rumps.MenuItem("Establecer umbral de precio", callback=self.set_price_threshold),
-            ("Intervalo de actualización", [
-                rumps.MenuItem("Cada 15 minutos", callback=self.set_interval_15_min),
-                rumps.MenuItem("Cada 4 horas", callback=self.set_interval_4_hours),
-                rumps.MenuItem("Cada 8 horas", callback=self.set_interval_8_hours),
-                rumps.MenuItem("Cada 24 horas", callback=self.set_interval_24_hours)
-            ]),
+            ("Intervalo de actualización", interval_menu),
             ("Ver eventos", [
                 rumps.MenuItem("Mostrar eventos", callback=self.show_events),
                 rumps.MenuItem("Limpiar eventos", callback=self.clear_events)
             ]),
             rumps.MenuItem("Salir", callback=self.quit_application)
         ]
-        self.menu["Intervalo de actualización"]["Cada 15 minutos"].state = True
+
+        self.menu["Intervalo de actualización"][self.selected_interval].state = True
         # Configurar estado inicial del menú
         self.menu["Notificaciones activadas"].state = self.notification_enabled
 
@@ -54,31 +63,21 @@ class PriceCheckerApp(rumps.App):
         self.timer.start()
 
         # Log para el intervalo actualizado
-        print(f"Intervalo actualizado a: {interval / 60} minutos")
+        print(f"Temporizador detenido. Reiniciando con nuevo intervalo: {interval / 60} minutos.")
+        print(f"Temporizador reiniciado con el intervalo: {interval / 60} minutos")
 
     def set_interval(self, interval, label):
-        self.update_timer(interval)
-        self.selected_interval = label
-        self.update_menu_state(label)
-
-    def set_interval_15_min(self, sender):
-        self.set_interval(15 * 60, "Cada 15 minutos")
-
-    def set_interval_4_hours(self, sender):
-        self.set_interval(4 * 60 * 60, "Cada 4 horas")
-
-    def set_interval_8_hours(self, sender):
-        self.set_interval(8 * 60 * 60, "Cada 8 horas")
-
-    def set_interval_24_hours(self, sender):
-        self.set_interval(24 * 60 * 60, "Cada 24 horas")
+        def callback(sender):
+            self.update_interval = interval * 60  # Convertir minutos a segundos
+            self.update_timer(self.update_interval)
+            self.selected_interval = label
+            self.update_menu_state(label)
+        return callback
 
     def update_menu_state(self, selected_label):
         # Desmarcar todas las opciones
-        self.menu["Intervalo de actualización"]["Cada 15 minutos"].state = False
-        self.menu["Intervalo de actualización"]["Cada 4 horas"].state = False
-        self.menu["Intervalo de actualización"]["Cada 8 horas"].state = False
-        self.menu["Intervalo de actualización"]["Cada 24 horas"].state = False
+        for _, label in self.intervals:
+            self.menu["Intervalo de actualización"][label].state = False
         
         # Marcar solo la opción seleccionada
         self.menu["Intervalo de actualización"][selected_label].state = True
