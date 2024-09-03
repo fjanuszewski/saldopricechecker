@@ -1,8 +1,12 @@
+import os
+import sys
 import json
 
 class Localizer:
     def __init__(self, language="es"):
-        with open("messages.json", "r") as file:
+        base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+        file_path = os.path.join(base_path, "messages.json")
+        with open(file_path, "r") as file:
             self.messages = json.load(file)
         self.language = language
 

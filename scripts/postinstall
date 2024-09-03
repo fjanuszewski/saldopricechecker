@@ -31,6 +31,10 @@ launchctl unload ~/Library/LaunchAgents/com.tuapp.saldopricechecker.plist
 echo "Cargando el Launch Agent" >> /tmp/postinstall.log
 launchctl load ~/Library/LaunchAgents/com.tuapp.saldopricechecker.plist
 
+# Crear el directorio para el log si no existe
+echo "Creando el directorio ~/Library/Application Support/SaldoPriceChecker si no existe" >> /tmp/postinstall.log
+mkdir -p ~/Library/Application\ Support/SaldoPriceChecker
+
 # Iniciar la aplicación inmediatamente después de la instalación
 echo "Iniciando la aplicación" >> /tmp/postinstall.log
 /Applications/SaldoPriceChecker.app/Contents/MacOS/SaldoPriceChecker &
