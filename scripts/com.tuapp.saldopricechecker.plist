@@ -16,5 +16,7 @@
         <string>/Users/$(whoami)/Library/Logs/saldopricechecker.log</string>
         <key>StandardErrorPath</key>
         <string>/Users/$(whoami)/Library/Logs/saldopricechecker_error.log</string>
+        <key>CFBundleIconFile</key>
+        <string>icon</string>
     </dict>
 </plist>

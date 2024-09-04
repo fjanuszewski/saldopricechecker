@@ -26,3 +26,4 @@ empty_dir/*
 
 # Ignorar scripts temporales o innecesarios
 scripts_uninstall/
+event_log.csv

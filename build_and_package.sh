@@ -9,7 +9,8 @@ SCRIPTS_DIR="./scripts"
 DIST_DIR="./dist"
 VENV_PATH="./venv"  # Ruta al entorno virtual
 SRC_DIR="./src"  # Directorio de código fuente
-ICON_PATH="resources/icon.icns"
+ICON_PATH="resources/icon.ico"
+
 
 # Crear el entorno virtual si no existe
 if [ ! -d "$VENV_PATH" ]; then
